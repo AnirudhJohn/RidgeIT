@@ -106,6 +106,9 @@ def generate_script():
 
     # Provide feedback to the user
     echo "Zscaler repository added to $REPO_FILE"
+
+    #Installing Zscaler App Connector Process
+    yum install zpa-connector -y
     # Stop the zpa process
     echo
     echo "Stopping the ZPA Process ....."; sleep 2;
