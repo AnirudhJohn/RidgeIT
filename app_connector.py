@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template_string
-import uuid
+import uuid, random, string 
 from urllib.parse import unquote
 
 app = Flask(__name__)
@@ -68,7 +68,7 @@ def generate_script():
     provisioning_key = unquote(encoded_key)
 
     # Generate a unique path
-    script_id = str(uuid.uuid4())
+    script_id = ''.join(random.choices(string.ascii_letters, k=4))
 
     # Create a bash script using the provisioning key
     script_content = f"""#!/bin/bash
@@ -122,11 +122,11 @@ fi
     scripts[script_id] = script_content
 
     # Generate the unique script URL using the same Flask host
-    script_url = f"/scripts/{script_id}"
+    script_url = f"/{script_id}"
     return jsonify({'script_url': script_url, 'script_content': script_content})
 
 
-@app.route('/scripts/<script_id>', methods=['GET'])
+@app.route('/<script_id>', methods=['GET'])
 def get_script(script_id):
     # Fetch the script content by ID
     script_content = scripts.get(script_id)
