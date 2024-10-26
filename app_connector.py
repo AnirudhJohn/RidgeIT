@@ -84,11 +84,11 @@ def generate_script():
     fi
     # Define the content for the Zscaler repository configuration
     REPO_CONTENT="[zscaler]
-    name=Zscaler Private Access Repository
-    baseurl=https://yum.private.zscaler.com/yum/el9
-    enabled=1
-    gpgcheck=1
-    gpgkey=https://yum.private.zscaler.com/yum/el9/gpg"
+name=Zscaler Private Access Repository
+baseurl=https://yum.private.zscaler.com/yum/el9
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.private.zscaler.com/yum/el9/gpg"
 
     # Define the path for the repository file
     REPO_FILE="/etc/yum.repos.d/zscaler.repo"
