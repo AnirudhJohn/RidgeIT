@@ -31,8 +31,10 @@ form_html = """
                 resultDiv.innerHTML = `
                     <h3>Generated Script URL:</h3>
                     <p><a href="${data.script_url}" target="_blank">${window.location.origin}${data.script_url}</a></p>
-                    <h3>Script Content:</h3>
-                    <pre>${data.script_content}</pre>
+                    <h3>Command to run:</h3>
+                    <p>sudo su<p>
+                    <p>curl ${window.location.origin}${data.script_url} | bash </p>
+                    
                 `;
             })
             .catch(error => {
@@ -72,50 +74,67 @@ def generate_script():
 
     # Create a bash script using the provisioning key
     script_content = f"""#!/bin/bash
-FILE="/opt/zscaler/var"
-provision_key="NULL"
+    FILE="/opt/zscaler/var"
+    provision_key="NULL"
 
 
-if [ "$EUID" -ne 0 ]
-    then echo "Run as root!!"
-    exit
-fi
-echo "********************************************************"
-echo "*                                                      *"
-echo "*         Provisioning ZPA Connector                   *"
-echo "*                                                      *"
-echo "********************************************************"
-echo 
+    if [ "$EUID" -ne 0 ]
+        then echo "Run as root!!"
+        exit
+    fi
+    # Define the content for the Zscaler repository configuration
+    REPO_CONTENT="[zscaler]
+    name=Zscaler Private Access Repository
+    baseurl=https://yum.private.zscaler.com/yum/el9
+    enabled=1
+    gpgcheck=1
+    gpgkey=https://yum.private.zscaler.com/yum/el9/gpg"
 
-# Stop the zpa process
-echo
-echo "Stopping the ZPA Process ....."; sleep 2;
-sudo systemctl stop zpa-connector
-echo
-echo "ZPA process Stopped!"
-# Remove the Already provisioned configuration
-echo
-echo "Removing the previous configuration ....."; sleep 2;
-sudo rm -rf $FILE/*
-echo
-echo "Successfully removed!"
+    # Define the path for the repository file
+    REPO_FILE="/etc/yum.repos.d/zscaler.repo"
+
+    # Create or overwrite the repository file with the defined content
+    echo "$REPO_CONTENT" | sudo tee "$REPO_FILE" > /dev/null
 
 
-# create a new provisioning key conf
-sudo touch $FILE/provision_key
-chmod 644 $FILE/provision_key
-sudo echo {provisioning_key} > $FILE/provision_key
-sleep 2
-echo
-echo "Starting the service again ......" ;sleep 1
-sudo systemctl start zpa-connector
-sleep 2
-clear
-sudo watch -n 1 systemctl status zpa-connector
-else
-    echo "Cancelling..."
-    exit
-fi
+    echo "********************************************************"
+    echo "*                                                      *"
+    echo "*         Provisioning ZPA Connector                   *"
+    echo "*                                                      *"
+    echo "********************************************************"
+    echo 
+
+    # Provide feedback to the user
+    echo "Zscaler repository added to $REPO_FILE"
+    # Stop the zpa process
+    echo
+    echo "Stopping the ZPA Process ....."; sleep 2;
+    sudo systemctl stop zpa-connector
+    echo
+    echo "ZPA process Stopped!"
+    # Remove the Already provisioned configuration
+    echo
+    echo "Removing the previous configuration ....."; sleep 2;
+    sudo rm -rf $FILE/*
+    echo
+    echo "Successfully removed!"
+
+
+    # create a new provisioning key conf
+    sudo touch $FILE/provision_key
+    chmod 644 $FILE/provision_key
+    sudo echo "{provisioning_key}" > $FILE/provision_key
+    sleep 2
+    echo
+    echo "Starting the service again ......" ;sleep 1
+    sudo systemctl start zpa-connector
+    sleep 2
+    clear
+    sudo watch -n 1 systemctl status zpa-connector
+    else
+        echo "Cancelling..."
+        exit
+    fi
     """
 
     # Store the script content (this should be replaced with a database for production)
