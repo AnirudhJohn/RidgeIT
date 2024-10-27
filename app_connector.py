@@ -10,31 +10,141 @@ scripts = {}
 # HTML template for the form
 form_html = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ZPA Provisioning Key</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZPA App Connector Deployments Automation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 100px;
+        }
+        h1 {
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 20px auto;
+            line-height: 1.6;
+        }
+        .instructions h2 {
+            color: #007BFF;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .instructions p {
+            margin: 8px 0;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            margin-right: 10px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        #result h3 {
+            margin-top: 0;
+            color: #007BFF;
+        }
+        #result p, #result pre {
+            margin: 10px 0;
+            word-wrap: break-word;
+        }
+        pre {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
     <script>
         function submitForm(event) {
-            event.preventDefault(); // Prevent the default form submission behavior
+            event.preventDefault();
             const form = event.target;
             const formData = new FormData(form);
 
-            // Send a POST request using Fetch API
             fetch('/generate_script', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                // Display the generated script URL and script content
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `
                     <h3>Generated Script URL:</h3>
                     <p><a href="${data.script_url}" target="_blank">${window.location.origin}${data.script_url}</a></p>
                     <h3>Command to run:</h3>
-                    <p>sudo su<p>
-                    <p>curl ${window.location.origin}${data.script_url} | bash </p>
-                    
+                    <pre><code>sudo su
+curl ${window.location.origin}${data.script_url} | bash</code></pre>
                 `;
             })
             .catch(error => {
@@ -44,10 +154,18 @@ form_html = """
     </script>
 </head>
 <body>
-    <h1>Enter Provisioning Key</h1>
+    <div class="logo-container">
+        <img src="https://cdn-ilahjpb.nitrocdn.com/jMqeUxLAqgawGnZWpPkDZlXAfrNBKXvD/assets/images/optimized/rev-c1528e3/www.ridgeit.com/wp-content/uploads/2023/05/Ridge-IT-Cyber-Logos_Ridge-blue.png" alt="Ridge IT Logo">
+    </div>
+    <h1>ZPA App Connector Deployments Automation</h1>
+    <div class="instructions">
+        <h2>Instructions:</h2>
+        <p><strong>Step 1:</strong> Add the provisioning key from the ZPA Admin portal and enter it in the text area below.</p>
+        <p><strong>Step 2:</strong> Run the generated commands on the app connector to provision the new connector.</p>
+    </div>
     <form onsubmit="submitForm(event)">
-        <label for="provisioning_key">Provisioning Key:</label><br>
-        <textarea id="provisioning_key" name="provisioning_key" rows="8" cols="100" required></textarea><br>
+        <label for="provisioning_key">Provisioning Key:</label>
+        <textarea id="provisioning_key" name="provisioning_key" rows="8" required></textarea>
         <button type="submit">Generate Script</button>
     </form>
     <div id="result"></div>
