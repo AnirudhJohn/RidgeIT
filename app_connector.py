@@ -283,70 +283,71 @@ def generate_script():
     script_id = ''.join(random.choices(string.ascii_letters, k=4))
 
     script_content = f"""#!/bin/bash
-    FILE="/opt/zscaler/var"
-    provision_key="NULL"
 
+FILE="/opt/zscaler/var"
+PROVISION_KEY=""
 
-    if [ "$EUID" -ne 0 ]
-        then echo "Run as root!!"
-        exit
-    fi
-    # Define the content for the Zscaler repository configuration
-    REPO_CONTENT="[zscaler]
+# Ensure the script is run as root
+if [ "$EUID" -ne 0 ]; then
+    echo "Run as root!!"
+    exit 1
+fi
+
+# Prompt user before proceeding
+read -p "Proceed with ZPA Connector provisioning? (y/n): " confirm
+if [[ "$confirm" != "y" ]]; then
+    echo "Cancelling..."
+    exit 0
+fi
+
+# Define the content for the Zscaler repository configuration
+REPO_CONTENT="[zscaler]
 name=Zscaler Private Access Repository
 baseurl=https://yum.private.zscaler.com/yum/el9
 enabled=1
 gpgcheck=1
 gpgkey=https://yum.private.zscaler.com/yum/el9/gpg"
 
-    # Define the path for the repository file
-    REPO_FILE="/etc/yum.repos.d/zscaler.repo"
+REPO_FILE="/etc/yum.repos.d/zscaler.repo"
 
-    # Create or overwrite the repository file with the defined content
-    echo "$REPO_CONTENT" | sudo tee "$REPO_FILE" > /dev/null
+# Create or overwrite the repository file
+echo "$REPO_CONTENT" > "$REPO_FILE"
 
+echo "********************************************************"
+echo "*                                                      *"
+echo "*         Provisioning ZPA Connector                   *"
+echo "*                                                      *"
+echo "********************************************************"
+echo
 
-    echo "********************************************************"
-    echo "*                                                      *"
-    echo "*         Provisioning ZPA Connector                   *"
-    echo "*                                                      *"
-    echo "********************************************************"
-    echo 
+echo "Zscaler repository added to $REPO_FILE"
 
-    # Provide feedback to the user
-    echo "Zscaler repository added to $REPO_FILE"
+# Install the Zscaler App Connector
+yum install zpa-connector -y
 
-    #Installing Zscaler App Connector Process
-    yum install zpa-connector -y
-    # Stop the zpa process
-    echo
-    echo "Stopping the ZPA Process ....."; sleep 2;
-    sudo systemctl stop zpa-connector
-    echo
-    echo "ZPA process Stopped!"
-    # Remove the Already provisioned configuration
-    echo
-    echo "Removing the previous configuration ....."; sleep 2;
-    sudo rm -rf $FILE/*
-    echo
-    echo "Successfully removed!"
+echo
+echo "Stopping the ZPA Process..."; sleep 2
+systemctl stop zpa-connector
+echo "ZPA process stopped."
 
+echo
+echo "Removing previous configuration..."; sleep 2
+rm -rf "$FILE"/*
+echo "Successfully removed!"
 
-    # create a new provisioning key conf
-    sudo touch $FILE/provision_key
-    chmod 644 $FILE/provision_key
-    sudo echo "{provisioning_key}" > $FILE/provision_key
-    sleep 2
-    echo
-    echo "Starting the service again ......" ;sleep 1
-    sudo systemctl start zpa-connector
-    sleep 2
-    clear
-    sudo watch -n 1 systemctl status zpa-connector
-    else
-        echo "Cancelling..."
-        exit
-    fi
+# Create new provisioning key file
+touch "$FILE/provision_key"
+chmod 644 "$FILE/provision_key"
+echo "$PROVISION_KEY" > "$FILE/provision_key"
+
+echo
+echo "Starting the ZPA Connector service again..."; sleep 1
+systemctl start zpa-connector
+sleep 2
+
+# Monitor service status
+clear
+watch -n 1 systemctl status zpa-connector
     """
 
     # Store the script content (this should be replaced with a database for production)
